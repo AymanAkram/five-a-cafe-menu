@@ -67,8 +67,8 @@ function itemName(sku){ var m=names[sku]; return m ? (m.ar+' · '+m.en) : sku; }
 
 function render(orders){
   var box=document.getElementById('orders');
-  var open=orders.filter(function(o){return o.status==='new';});
-  var done=orders.filter(function(o){return o.status!=='new';}).slice(0,20);
+  var open=orders.filter(function(o){return o.status!=='done';});
+  var done=orders.filter(function(o){return o.status==='done';}).slice(0,20);
   function card(o, isDone){
     var items=(o.order_items||[]).map(function(i){ return '<li>'+i.qty+' × '+esc(itemName(i.sku))+'</li>'; }).join('');
     return '<div class="card ord'+(isDone?' done':'')+'">'+
@@ -78,7 +78,7 @@ function render(orders){
       '<ul class="items">'+items+'</ul>'+
       (o.note?'<div class="note">ملاحظة: '+esc(o.note)+'</div>':'')+
       '<div id="photo-'+o.id+'" class="photo-review">جاري تحميل صورة الترابيزة...</div>'+
-      (isDone?'':'<button class="done-btn" onclick="markDone(\''+o.id+'\')">تم التجهيز ✓</button>')+
+      (isDone?'':(o.status==='preparing'?'<p class="photo-ok">جاري التحضير</p>':'<button class="done-btn" onclick="startPreparing(\''+o.id+'\')">تأكيد الطلب وبدء التحضير</button>')+'<button class="done-btn" onclick="markDone(\''+o.id+'\')">تم التجهيز ✓</button>')+
       '</div>';
   }
   box.innerHTML =
@@ -95,11 +95,11 @@ async function loadPhotos(orders){
   var r=photoCache[o.id] && Date.parse(photoCache[o.id].expires_at)>Date.now()?{data:photoCache[o.id]}:await sb.from('order_photos').select('jpeg_base64,expires_at').eq('order_id',o.id).maybeSingle();
   if(r.data)photoCache[o.id]=r.data;
   if(r.error){box.textContent='تعذر تحميل الصورة. لا تبدأ التحضير قبل مراجعة الترابيزة.';continue;}
-  if(!r.data){box.textContent='الصورة غير متاحة أو انتهت مدتها. تأكد من الترابيزة مباشرة قبل التحضير.';if(o.photo_checked)confirmedPhotos[o.id]=true;else if(o.status==='new'){var direct=document.createElement('button');direct.textContent='تأكدت من الترابيزة مباشرة';direct.addEventListener('click',(function(id){return async function(){var result=await sb.from('orders').update({photo_checked:true}).eq('id',id);if(result.error){alert('لم يتم الحفظ');return;}refresh();};})(o.id));box.appendChild(direct);}continue;}
+  if(!r.data){box.textContent='الصورة غير متاحة أو انتهت مدتها. تأكد من الترابيزة مباشرة قبل التحضير.';if(o.photo_checked)confirmedPhotos[o.id]=true;else if(o.status!=='done'){var direct=document.createElement('button');direct.textContent='تأكدت من الترابيزة مباشرة';direct.addEventListener('click',(function(id){return async function(){var result=await sb.from('orders').update({photo_checked:true}).eq('id',id);if(result.error){alert('لم يتم الحفظ');return;}refresh();};})(o.id));box.appendChild(direct);}continue;}
   var img=document.createElement('img');img.className='table-photo';img.alt='صورة رقم الترابيزة '+o.table_no;img.src='data:image/jpeg;base64,'+r.data.jpeg_base64;
   box.textContent='صورة خاصة، طابق الرقم الظاهر مع الترابيزة '+o.table_no+' قبل التحضير. تختفي بعد ٢٤ ساعة.';box.appendChild(img);
   if(o.photo_checked){confirmedPhotos[o.id]=true;var ok=document.createElement('p');ok.className='photo-ok';ok.textContent='✓ تم تأكيد مطابقة رقم الترابيزة';box.appendChild(ok);}
-  else if(o.status==='new'){
+  else if(o.status!=='done'){
    var b=document.createElement('button');b.className='done-btn';b.textContent='راجعت الصورة والرقم مطابق';
    b.addEventListener('click',(function(order){return async function(){
     var result=await sb.from('orders').update({photo_checked:true}).eq('id',order.id);if(result.error){alert('لم يتم حفظ المراجعة، حاول تاني');return;}await refresh();
@@ -117,6 +117,11 @@ async function refresh(){
   document.getElementById('live').textContent='آخر تحديث '+new Date().toLocaleTimeString('ar-EG')+' · تحديث تلقائي كل 30 ثانية';
 }
 
+window.startPreparing=async function(id){
+ if(!confirmedPhotos[id]){alert('راجع رقم الترابيزة أولًا قبل بدء التحضير');return;}
+ var result=await sb.from('orders').update({status:'preparing'}).eq('id',id);
+ if(result.error){alert('لم يتم الحفظ، حاول مرة أخرى');return;}refresh();
+};
 window.markDone=async function(id){
   if(!confirmedPhotos[id]){alert('طابق رقم الترابيزة في الصورة ووافق عليه أولًا. لو الصورة انتهت، تأكد مباشرة من الترابيزة.');return;}
   var result=await sb.from('orders').update({status:'done'}).eq('id', id);
