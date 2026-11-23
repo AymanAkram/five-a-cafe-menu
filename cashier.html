@@ -45,7 +45,7 @@
     <div class="err" id="login-err"></div>
   </div>
 
-  <div id="live">● متصل — الطلبات الجديدة بتظهر فورًا</div>
+  <div id="live">جاري تحميل الطلبات...</div>
   <div id="orders"></div>
 </div>
 
@@ -89,12 +89,14 @@ function render(orders){
 
 async function refresh(){
   var r=await sb.from('orders').select('id,order_no,table_no,note,status,total,created_at,order_items(sku,qty,unit_price)').order('order_no',{ascending:false}).limit(50);
-  if(r.error){ document.getElementById('orders').innerHTML='<div class="empty">مشكلة في التحميل: '+esc(r.error.message)+'</div>'; return; }
+  if(r.error){ document.getElementById('live').textContent='فشل التحديث، تحقق من الإنترنت وأعد تحميل الصفحة'; document.getElementById('orders').innerHTML='<div class="empty">مشكلة في التحميل: '+esc(r.error.message)+'</div>'; return; }
   render(r.data||[]);
+  document.getElementById('live').textContent='آخر تحديث '+new Date().toLocaleTimeString('ar-EG')+' · تحديث تلقائي كل 30 ثانية';
 }
 
 window.markDone=async function(id){
-  await sb.from('orders').update({status:'done'}).eq('id', id);
+  var result=await sb.from('orders').update({status:'done'}).eq('id', id);
+  if(result.error){alert('لم يتم حفظ التغيير. حاول مرة أخرى');return;}
   refresh();
 };
 
