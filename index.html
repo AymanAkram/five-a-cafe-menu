@@ -1090,7 +1090,16 @@ secs.forEach(s=>spy.observe(s));
   <div class="cart-total"><span>Total · الإجمالي</span><span id="cart-total">0 LE</span></div>
   <input id="table-num" inputmode="numeric" pattern="[0-9]*" placeholder="Table number · رقم الترابيزة">
   <textarea id="order-note" rows="2" placeholder="Notes (optional) · ملاحظات (اختياري)" style="width:100%;box-sizing:border-box;padding:11px 14px;border:2px solid var(--sage);border-radius:12px;font-family:var(--serif);font-size:15px;margin-bottom:8px;background:#fff;color:var(--ink)"></textarea>
-  <button id="confirm-order" type="button">Confirm Order · تأكيد الطلب</button>
+  <div id="table-photo-box" style="padding:12px;border:1px solid #9dab90;border-radius:12px;margin-bottom:8px;font:14px Tahoma,sans-serif;direction:rtl">
+<strong>صوّر رقم الترابيزة بوضوح</strong>
+<p style="font-size:12px;line-height:1.7;margin:6px 0">صوّر الرقم والترابيزة فقط، من غير وجوه. الصورة خاصة بالكاشير لمطابقة الرقم، وليست إثباتًا قاطعًا للتواجد. تُحذف تلقائيًا خلال مدة تصل إلى ٢٤ ساعة أثناء تشغيل الخدمة. بيانات الطلب تظل محفوظة.</p>
+<button type="button" id="camera-open" style="padding:10px;border-radius:8px">فتح الكاميرا 📷</button>
+<video id="table-camera" playsinline autoplay muted style="display:none;width:100%;max-height:220px;border-radius:8px;margin-top:8px"></video>
+<button type="button" id="camera-snap" style="display:none;padding:10px;margin-top:8px">التقاط الصورة</button>
+<img id="table-photo-preview" alt="صورة رقم الترابيزة للمراجعة" style="display:none;max-width:100%;max-height:180px;margin:8px auto;border-radius:8px">
+<p id="photo-hint" role="status" style="font-size:12px;margin-top:8px">الصورة مطلوبة لإرسال الطلب. لو الكاميرا مش متاحة، اطلب من الكاشير مباشرة.</p>
+</div>
+<button id="confirm-order" type="button">Confirm Order · تأكيد الطلب</button>
   <div id="cart-status"></div>
  </div>
 </div>
@@ -1136,7 +1145,7 @@ function renderItems(){
 }
 function renderAll(){ renderBadge(); renderItems(); }
 function openCart(){ drawer.classList.add('open'); backdrop.classList.add('open'); renderAll(); }
-function closeCart(){ drawer.classList.remove('open'); backdrop.classList.remove('open'); }
+function closeCart(){ stopCamera(); drawer.classList.remove('open'); backdrop.classList.remove('open'); }
 fab.addEventListener('click', openCart);
 $('cart-close').addEventListener('click', closeCart);
 backdrop.addEventListener('click', closeCart);
@@ -1152,12 +1161,36 @@ document.addEventListener('click', function(ev){
   fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump');
 });
 
+var photoData=null, cameraStream=null, photoTakenAt=0;
+function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop();});cameraStream=null;} $('table-camera').srcObject=null; $('table-camera').style.display='none';$('camera-snap').style.display='none';}
+function clearPhoto(){photoData=null;photoTakenAt=0;$('table-photo-preview').removeAttribute('src');$('table-photo-preview').style.display='none';}
+$('camera-open').addEventListener('click',async function(){
+  stopCamera();clearPhoto();
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){$('photo-hint').textContent='الكاميرا غير متاحة هنا. افتح الرابط في Safari أو Chrome، أو اطلب من الكاشير مباشرة.';return;}
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+    $('table-camera').srcObject=cameraStream;$('table-camera').style.display='block';$('camera-snap').style.display='inline-block';
+    $('photo-hint').textContent='وجّه الكاميرا لرقم الترابيزة بدون وجوه، ثم التقط الصورة.';
+  }catch(e){stopCamera();$('photo-hint').textContent='لم نستطع فتح الكاميرا. اسمح باستخدامها أو اطلب من الكاشير مباشرة.';}
+});
+$('camera-snap').addEventListener('click',function(){
+ var v=$('table-camera');if(!v.videoWidth){$('photo-hint').textContent='استنى الكاميرا تجهز وجرب تاني';return;}
+ var c=document.createElement('canvas'),scale=Math.min(1,960/v.videoWidth);c.width=Math.round(v.videoWidth*scale);c.height=Math.round(v.videoHeight*scale);c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+ var data,q=.86;do{data=c.toDataURL('image/jpeg',q);q-=.08;}while(data.length>136550 && q>.25);
+ if(data.length>136550){$('photo-hint').textContent='الصورة كبيرة، قرب الكاميرا من الرقم وجرب تاني';return;}
+ photoData=data.split(',')[1];photoTakenAt=Date.now();$('table-photo-preview').src=data;$('table-photo-preview').style.display='block';stopCamera();$('photo-hint').textContent='راجع أن الرقم واضح ومطابق للرقم المكتوب. الكاشير هيراجع الصورة قبل التحضير.';$('camera-open').textContent='إعادة التصوير 📷';
+});
+document.addEventListener('visibilitychange',function(){if(document.hidden)stopCamera();});
+window.addEventListener('pagehide',stopCamera);
+$('table-num').addEventListener('input',function(){clearPhoto();$('photo-hint').textContent='رقم الترابيزة اتغيّر. التقط صورة جديدة للرقم الصحيح.';});
+
 $('confirm-order').addEventListener('click', function(){
   var st=$('cart-status');
   var keys=Object.keys(cart).filter(function(k){return cart[k]>0;});
   if(!keys.length){ st.className='err'; st.id='cart-status'; st.textContent='Add items first · ضيف أصناف الأول'; return; }
   var table=$('table-num').value.trim();
   if(!table){ st.className='err'; st.textContent='Enter your table number · اكتب رقم الترابيزة'; return; }
+  if(!photoData || Date.now()-photoTakenAt>10*60*1000){ clearPhoto();st.className='err';st.textContent='صوّر رقم الترابيزة بوضوح قبل إرسال الطلب. لو الكاميرا مش متاحة، اطلب من الكاشير.';return;}
   st.className=''; st.textContent='';
   submitOrder(table, $('order-note').value.trim(), keys);
 });
@@ -1175,19 +1208,19 @@ function submitOrder(table, note, keys){
     st.textContent='Online ordering is being set up. Please order at the counter · الطلب أونلاين لسه بيتجهز، اطلب من الكاشير';
     return;
   }
-  var payload=JSON.stringify({table:table,note:note,items:items});
+  var payload=JSON.stringify({table:table,note:note,items:items,photoTime:photoTakenAt});
   var ck=localStorage.getItem('fivea_ck');
-  if(!ck || localStorage.getItem('fivea_payload')!==payload || !/^[0-9a-f-]{36}$/i.test(ck)){
+  if(!ck || sessionStorage.getItem('fivea_payload')!==payload || !/^[0-9a-f-]{36}$/i.test(ck)){
     ck=crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,function(c){return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);});
-    localStorage.setItem('fivea_ck',ck); localStorage.setItem('fivea_payload',payload);
+    localStorage.setItem('fivea_ck',ck); sessionStorage.setItem('fivea_payload',payload);
   }
   fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY},
-    body:JSON.stringify({p_table:table,p_note:note,p_client_key:ck,p_items:items})})
+    body:JSON.stringify({p_table:table,p_note:note,p_client_key:ck,p_items:items,p_photo:photoData})})
   .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, body:j}; }); })
   .then(function(res){
     if(res.ok && res.body && res.body.ok){
-      localStorage.removeItem('fivea_ck'); localStorage.removeItem('fivea_payload');
-      cart={}; save(); renderAll();
+      localStorage.removeItem('fivea_ck'); sessionStorage.removeItem('fivea_payload');
+      cart={}; clearPhoto(); save(); renderAll();
       st.className='ok';
       st.textContent='Order #'+res.body.order_no+' received · تم استلام طلبك رقم '+res.body.order_no+' ✅';
       setTimeout(closeCart, 1800);
@@ -1206,4 +1239,4 @@ renderBadge();
 </script>
 
 </body>
-   </html>
+ </html>
