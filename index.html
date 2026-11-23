@@ -1122,7 +1122,7 @@ try{tracking=JSON.parse(localStorage.getItem('fivea_tracking')||'null');if(track
 function trackPaint(status){
  var box=document.getElementById('order-tracking');if(!tracking)return;box.hidden=false;
  document.getElementById('tracking-title').textContent='طلبك رقم '+tracking.no;
- document.getElementById('tracking-state').textContent=status==='done'?'🔔 طلبك اتحضر وجاي لك.':status==='preparing'?'تم تأكيد طلبك وجاري تحضيره.':'تم استلام طلبك، في انتظار تأكيد الكاشير.';
+ document.getElementById('tracking-state').textContent=status==='done'?'طلبك اتحضر وجاي لك.':status==='preparing'?'تم تأكيد طلبك وجاري تحضيره.':'تم استلام طلبك، في انتظار تأكيد الكاشير.';
  document.getElementById('tracking-close').hidden=status!=='done';
  box.style.borderColor=status==='done'?'#416647':'#9dab90';
 }
