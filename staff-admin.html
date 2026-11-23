@@ -43,6 +43,7 @@ body{background:#f2efe5;color:#3f5137}.wrap{max-width:820px;padding:18px}h1{font
 .reset-box{margin-top:12px;background:#f4f5ea;border-radius:14px;padding:14px}
 .reset-box h3{font-size:13px;color:#5d7350;margin-bottom:6px}
 #staff-refresh{margin:6px 0 0;background:#e8eddf;border:1px solid #c6d2b8;color:#536c43}
+.role-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}.role-pick button{background:#f4f5ea;border:1.5px solid #cdd6bd;color:#536b42;border-radius:14px;padding:12px;min-height:64px;font:13px/1.7 inherit}.role-pick button small{display:block;font-size:10px;color:#87967a}.role-pick button.sel{background:#7b8e6d;color:#fffdf5;border-color:#7b8e6d}.role-pick button.sel small{color:#eef2e4}
 .chev{font:18px Georgia,serif;color:#8a987d;transition:transform .15s}
 .staff-card.open .chev{transform:rotate(90deg)}
 a:focus-visible,button:focus-visible{outline:3px solid #a5b78f;outline-offset:3px}
@@ -67,6 +68,11 @@ a:focus-visible,button:focus-visible{outline:3px solid #a5b78f;outline-offset:3p
     <input id="nw-pass" type="password" dir="ltr" autocomplete="new-password">
     <label for="nw-pass2">تأكيد كلمة السر</label>
     <input id="nw-pass2" type="password" dir="ltr" autocomplete="new-password">
+    <label>الصلاحية</label>
+    <div class="role-pick" role="radiogroup" aria-label="صلاحية الحساب">
+      <button type="button" id="role-staff" class="sel" aria-pressed="true">كاشير<small>شاشة الطلبات بس</small></button>
+      <button type="button" id="role-manager" aria-pressed="false">مدير<small>الطلبات والتقييمات وإدارة الموظفين</small></button>
+    </div>
     <button class="btn-full" id="nw-create">إنشاء الحساب وتفعيله</button>
     <div class="err" id="nw-err" role="status" aria-live="polite"></div>
     <div class="ok" id="nw-ok" role="status" aria-live="polite"></div>
@@ -114,7 +120,9 @@ async function callAdmin(body){
  }catch(e){return {ok:false,error:'network'}}
 }
 
-var currentStaff=[],openId=null;
+var currentStaff=[],openId=null,newRole='staff';
+$('role-staff').addEventListener('click',function(){newRole='staff';$('role-staff').classList.add('sel');$('role-staff').setAttribute('aria-pressed','true');$('role-manager').classList.remove('sel');$('role-manager').setAttribute('aria-pressed','false')});
+$('role-manager').addEventListener('click',function(){newRole='manager';$('role-manager').classList.add('sel');$('role-manager').setAttribute('aria-pressed','true');$('role-staff').classList.remove('sel');$('role-staff').setAttribute('aria-pressed','false')});
 
 function workerCard(w){
  var card=document.createElement('article');card.className='card staff-card'+(openId===w.id?' open':'');
@@ -189,11 +197,11 @@ $('nw-create').addEventListener('click',async function(){
  if(pw.length<8){er.textContent=MSG.bad_password;return}
  if(pw!==pw2){er.textContent='كلمتا السر مش متطابقتين.';return}
  var b=$('nw-create');b.disabled=true;b.textContent='جاري إنشاء الحساب…';
- var r=await callAdmin({action:'create',username:user,display_name:name,password:pw});
+ var r=await callAdmin({action:'create',username:user,display_name:name,password:pw,role:newRole});
  b.disabled=false;b.textContent='إنشاء الحساب وتفعيله';
  if(!r.ok){er.textContent=msg(r.error);return}
  $('nw-name').value='';$('nw-user').value='';$('nw-pass').value='';$('nw-pass2').value='';
- ok.textContent='اتفعل حساب '+name+'. يدخل باسم المستخدم '+r.username+' وكلمة السر اللي اخترتها.';
+ ok.textContent='اتفعل حساب '+name+(r.role==='manager'?' بصلاحية مدير':' بصلاحية كاشير')+'. يدخل باسم المستخدم '+r.username+' وكلمة السر اللي اخترتها.';
  await loadStaff();
 });
 
