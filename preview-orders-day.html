@@ -70,12 +70,16 @@ var COLS='id,order_no,table_no,note,status,total,created_at,photo_checked,order_
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function fmtTime(ts){ var d=new Date(ts); return d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})+' — '+d.toLocaleDateString('ar-EG'); }
 
-function dayKey(ts){ var d=new Date(ts); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
-function dayName(ts){ return new Date(ts).toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'}); }
+var CAFE_TZ='Africa/Cairo';
+var cafeDTF=new Intl.DateTimeFormat('en-US',{timeZone:CAFE_TZ,year:'numeric',month:'numeric',day:'numeric'});
+function cafeParts(ts){ var o={}; cafeDTF.formatToParts(new Date(ts)).forEach(function(x){o[x.type]=x.value;}); return {y:+o.year,m:+o.month,d:+o.day}; }
+function dayKey(ts){ var c=cafeParts(ts); return c.y+'-'+c.m+'-'+c.d; }
+function cafeTodayKey(){ return dayKey(Date.now()); }
+function cafeYesterdayKey(){ var c=cafeParts(Date.now()); var dt=new Date(Date.UTC(c.y,c.m-1,c.d)-86400000); return dt.getUTCFullYear()+'-'+(dt.getUTCMonth()+1)+'-'+dt.getUTCDate(); }
+function dayName(ts){ return new Date(ts).toLocaleDateString('ar-EG',{timeZone:CAFE_TZ,weekday:'long',day:'numeric',month:'long'}); }
 function dayLabel(key,ts){
-  var yest=new Date(); yest.setDate(yest.getDate()-1);
-  if(key===dayKey(Date.now())) return 'النهارده · '+dayName(ts);
-  if(key===dayKey(yest)) return 'إمبارح · '+dayName(ts);
+  if(key===cafeTodayKey()) return 'النهارده · '+dayName(ts);
+  if(key===cafeYesterdayKey()) return 'إمبارح · '+dayName(ts);
   return dayName(ts);
 }
 
@@ -88,7 +92,7 @@ function itemName(sku){ var m=names[sku]; return m ? (m.ar+' · '+m.en) : sku; }
 
 function render(orders){
   var box=document.getElementById('orders');
-  var todayKey=dayKey(Date.now());
+  var todayKey=cafeTodayKey();
   var open=orders.filter(function(o){return o.status!=='done';});
   var done=orders.filter(function(o){return o.status==='done';});
   function card(o, isDone){
@@ -171,7 +175,13 @@ window.loadOlder=async function(){
 };
 async function refresh(){
   const generation=authGeneration;
-  var r1=await sb.from('orders').select(COLS).neq('status','done').order('order_no',{ascending:false}).limit(1000);
+var r1={data:[],error:null};
+  for(var off=0;;off+=500){
+    var page=await sb.from('orders').select(COLS).neq('status','done').order('order_no',{ascending:false}).range(off,off+499);
+    if(page.error){r1=page;break;}
+    r1.data=r1.data.concat(page.data||[]);
+    if((page.data||[]).length<500)break;
+  }
   if(generation!==authGeneration)return;
   if(r1.error){ document.getElementById('live').textContent='فشل التحديث، تحقق من الإنترنت وأعد تحميل الصفحة'; document.getElementById('orders').innerHTML='<div class="empty">مشكلة في التحميل: '+esc(r1.error.message)+'</div>'; return; }
   var r2=await sb.from('orders').select(COLS).eq('status','done').order('order_no',{ascending:false}).limit(DONE_PAGE);
