@@ -202,6 +202,16 @@ footer .tg{margin-top:12px;font-size:13px;letter-spacing:.26em;text-transform:up
 #cart-status.err{color:#a33}
 #cart-status.ok{color:#2c6e49;font-weight:700}
 
+
+/* Keep item review and camera controls reachable on short mobile screens. */
+#cart-drawer{display:block;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;max-height:90vh;max-height:90dvh;padding-bottom:env(safe-area-inset-bottom)}
+.cart-head{position:sticky;top:0;z-index:2;background:var(--ivory)}
+#cart-items{flex:none;overflow:visible}
+.cart-foot{flex:none}
+#table-photo-box strong{display:block;margin-bottom:8px}
+#table-camera{height:160px;max-height:25vh!important;max-height:25dvh!important;object-fit:contain;background:#20271e}
+#camera-snap{width:100%;min-height:44px;background:var(--deep);color:var(--ivory);border:0;border-radius:8px;font:700 15px Tahoma,sans-serif}
+#camera-open{min-height:44px}
 </style>
 </head>
 <body>
@@ -1238,4 +1248,4 @@ renderBadge();
 </script>
 
 </body>
-   </html>
+ </html>
