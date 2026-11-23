@@ -188,7 +188,7 @@ window.applyFilter=async function(){
   filterActive=true;filterRows=[];filterCursor=null;filterHasMore=true;
   await loadFilterPage();
 };
-window.clearFilter=function(){filterActive=false;filterRows=[];filterCursor=null;filterHasMore=false;render(currentOrders);};
+window.clearFilter=function(){filters.date='';filters.no='';filterActive=false;filterRows=[];filterCursor=null;filterHasMore=false;render(currentOrders);};
 window.loadFilterPage=async function(){
   if(filterLoading)return;
   filterLoading=true;render(currentOrders);
