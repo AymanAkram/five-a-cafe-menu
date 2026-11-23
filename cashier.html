@@ -25,7 +25,7 @@
   .meta{font-size:12px;color:#7a7364;margin-top:2px}
   .items{margin:10px 0 0;padding-right:14px;font-size:15px;line-height:1.9}
   .note{background:#fdf6e3;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:8px}
-  .done-btn{background:#5c7a5e;margin-top:10px;width:100%}
+  .table-photo{display:block;width:100%;max-height:360px;object-fit:contain;border-radius:8px;margin-top:10px}.photo-review{font-size:13px;background:#fdf6e3;padding:10px;border-radius:8px;margin-top:8px}.photo-ok{color:#416647;font-weight:700;margin-top:8px}.done-btn{background:#5c7a5e;margin-top:10px;width:100%}
   .sec-t{font-size:15px;font-weight:800;margin:18px 0 8px;color:#6a6355}
   .out{position:fixed;top:10px;left:10px;background:none;color:#7a7364;font-size:13px;padding:6px}
   #live{display:none;text-align:center;font-size:12px;color:#5c7a5e;padding-bottom:8px}
@@ -53,7 +53,7 @@
 var SUPA_URL='https://gglkftkdpfmwuvdeytur.supabase.co';
 var SUPA_KEY='sb_publishable_u3BCukoQW8b4AVMGOLSOLw_6Yh_vi4a';
 var sb=supabase.createClient(SUPA_URL, SUPA_KEY);
-var names={};
+var names={},confirmedPhotos={},photoCache={};
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function fmtTime(ts){ var d=new Date(ts); return d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})+' — '+d.toLocaleDateString('ar-EG'); }
@@ -77,6 +77,7 @@ function render(orders){
       '<div class="meta">'+fmtTime(o.created_at)+' — الإجمالي '+o.total+' ج.م</div>'+
       '<ul class="items">'+items+'</ul>'+
       (o.note?'<div class="note">ملاحظة: '+esc(o.note)+'</div>':'')+
+      '<div id="photo-'+o.id+'" class="photo-review">جاري تحميل صورة الترابيزة...</div>'+
       (isDone?'':'<button class="done-btn" onclick="markDone(\''+o.id+'\')">تم التجهيز ✓</button>')+
       '</div>';
   }
@@ -87,14 +88,37 @@ function render(orders){
     (done.length? done.map(function(o){return card(o,true);}).join('') : '<div class="empty">لسه مفيش</div>');
 }
 
+async function loadPhotos(orders){
+ confirmedPhotos={};
+ for(var o of orders){
+  var box=document.getElementById('photo-'+o.id);if(!box)continue;
+  var r=photoCache[o.id] && Date.parse(photoCache[o.id].expires_at)>Date.now()?{data:photoCache[o.id]}:await sb.from('order_photos').select('jpeg_base64,expires_at').eq('order_id',o.id).maybeSingle();
+  if(r.data)photoCache[o.id]=r.data;
+  if(r.error){box.textContent='تعذر تحميل الصورة. لا تبدأ التحضير قبل مراجعة الترابيزة.';continue;}
+  if(!r.data){box.textContent='الصورة غير متاحة أو انتهت مدتها. تأكد من الترابيزة مباشرة قبل التحضير.';if(o.photo_checked)confirmedPhotos[o.id]=true;else if(o.status==='new'){var direct=document.createElement('button');direct.textContent='تأكدت من الترابيزة مباشرة';direct.addEventListener('click',(function(id){return async function(){var result=await sb.from('orders').update({photo_checked:true}).eq('id',id);if(result.error){alert('لم يتم الحفظ');return;}refresh();};})(o.id));box.appendChild(direct);}continue;}
+  var img=document.createElement('img');img.className='table-photo';img.alt='صورة رقم الترابيزة '+o.table_no;img.src='data:image/jpeg;base64,'+r.data.jpeg_base64;
+  box.textContent='صورة خاصة، طابق الرقم الظاهر مع الترابيزة '+o.table_no+' قبل التحضير. تختفي بعد ٢٤ ساعة.';box.appendChild(img);
+  if(o.photo_checked){confirmedPhotos[o.id]=true;var ok=document.createElement('p');ok.className='photo-ok';ok.textContent='✓ تم تأكيد مطابقة رقم الترابيزة';box.appendChild(ok);}
+  else if(o.status==='new'){
+   var b=document.createElement('button');b.className='done-btn';b.textContent='راجعت الصورة والرقم مطابق';
+   b.addEventListener('click',(function(order){return async function(){
+    var result=await sb.from('orders').update({photo_checked:true}).eq('id',order.id);if(result.error){alert('لم يتم حفظ المراجعة، حاول تاني');return;}await refresh();
+   };})(o));box.appendChild(b);
+  }
+  (function(el,expiry){setTimeout(function(){delete photoCache[el.id.replace('photo-','')];el.textContent='انتهت مدة عرض الصورة. تأكد مباشرة من الترابيزة عند الحاجة.';},Math.max(0,Date.parse(expiry)-Date.now()));})(box,r.data.expires_at);
+ }
+}
+
 async function refresh(){
-  var r=await sb.from('orders').select('id,order_no,table_no,note,status,total,created_at,order_items(sku,qty,unit_price)').order('order_no',{ascending:false}).limit(50);
+  var r=await sb.from('orders').select('id,order_no,table_no,note,status,total,created_at,photo_checked,order_items(sku,qty,unit_price)').order('order_no',{ascending:false}).limit(50);
   if(r.error){ document.getElementById('live').textContent='فشل التحديث، تحقق من الإنترنت وأعد تحميل الصفحة'; document.getElementById('orders').innerHTML='<div class="empty">مشكلة في التحميل: '+esc(r.error.message)+'</div>'; return; }
   render(r.data||[]);
+  await loadPhotos(r.data||[]);
   document.getElementById('live').textContent='آخر تحديث '+new Date().toLocaleTimeString('ar-EG')+' · تحديث تلقائي كل 30 ثانية';
 }
 
 window.markDone=async function(id){
+  if(!confirmedPhotos[id]){alert('طابق رقم الترابيزة في الصورة ووافق عليه أولًا. لو الصورة انتهت، تأكد مباشرة من الترابيزة.');return;}
   var result=await sb.from('orders').update({status:'done'}).eq('id', id);
   if(result.error){alert('لم يتم حفظ التغيير. حاول مرة أخرى');return;}
   refresh();
