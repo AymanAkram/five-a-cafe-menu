@@ -49,10 +49,12 @@ body{background:#f2efe5;color:#3f5137}.wrap{max-width:820px;padding:18px}h1{font
 a:focus-visible,button:focus-visible{outline:3px solid #a5b78f;outline-offset:3px}
 </style>
 <style id="fivea-selected-arabic">@font-face{font-family:FiveAArabic;src:url(6-regular.woff);font-weight:400;font-display:swap;size-adjust:115%;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF;}@font-face{font-family:FiveAArabic;src:url(10-bold.woff);font-weight:700;font-display:swap;size-adjust:115%;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF;}body{line-height:1.9}button,input{font-family:'FiveAArabic',Arial,sans-serif}</style>
+<link rel="icon" href="8-brand.webp">
+<link rel="stylesheet" href="staff-identity.css">
 </head>
 <body>
 <div class="wrap">
-  <h1>5A — إدارة الموظفين</h1>
+  <h1>5A — إدارة الموظفين</h1><header class="staff-scene"><div class="brand-arch" aria-hidden="true"><span>5A</span></div><img class="staff-emblem" src="8-brand.webp" width="90" height="90" alt="5A"><div class="brand-greeting"><span class="brand-eyebrow">مساحة فريق 5A</span><strong>فريق 5A</strong><p>الناس اللي بتصنع التجربة.</p></div><span class="brand-rule" aria-hidden="true"></span></header>
 
 <a id="quick-orders" class="page-switch" href="cashier.html?view=orders" aria-label="التبديل إلى الطلبات" title="الطلبات" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v18l-3-2-3 2-3-2-3 2V4Z"/><path d="M9 2h6v5H9zM9 11h6M9 15h6"/></svg><span>الطلبات</span></a><nav class="manager-nav" hidden><a href="cashier.html">الرئيسية</a><a href="cashier.html?view=orders">الطلبات</a><a href="reviews-admin.html">التقييمات</a><button type="button" id="admin-logout">تسجيل الخروج</button></nav><p id="access-status" role="status" aria-live="polite">جاري التحقق من صلاحيات الإدارة…</p>
 
