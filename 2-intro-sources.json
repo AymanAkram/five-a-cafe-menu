@@ -1,0 +1,132 @@
+{
+  "license": "https://www.pexels.com/license/",
+  "usage": "Short silent edited illustrative stock footage. Not photos of actual cafe products.",
+  "clips": [
+    {
+      "section": "hot-drinks",
+      "source": "https://www.pexels.com/video/traditional-tea-pouring-in-rustic-teapot-31952188/",
+      "start_seconds": 0.0,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "coffee",
+      "source": "https://www.pexels.com/video/close-up-shot-of-espresso-machine-brewing-coffee-37434227/",
+      "start_seconds": 1,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "milkshake",
+      "source": "https://www.pexels.com/video/a-person-putting-whipped-cream-on-the-milk-shake-6463449/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "iced-chocolate",
+      "source": "https://www.pexels.com/video/pouring-delicious-chocolate-milk-into-glass-37714312/",
+      "start_seconds": 1,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "iced-coffee",
+      "source": "https://www.pexels.com/video/pouring-milk-in-the-coffee-13737095/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "frappe",
+      "source": "https://www.pexels.com/video/mixing-pure-blended-coffee-in-milk-5537650/",
+      "start_seconds": 1,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "matcha",
+      "source": "https://www.pexels.com/video/refreshing-iced-matcha-preparation-in-cafe-39535028/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "fresh-juices",
+      "source": "https://www.pexels.com/video/a-person-pouring-juice-on-a-glass-7704096/",
+      "start_seconds": 3,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "mixed-juices",
+      "source": "https://www.pexels.com/video/video-of-a-fruit-juice-7656424/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "smoothies",
+      "source": "https://www.pexels.com/video/kiwi-juice-in-a-cup-7656265/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "mojito",
+      "source": "https://www.pexels.com/video/preparing-refreshing-drink-for-summers-5101685/",
+      "start_seconds": 3,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "sundae",
+      "source": "https://www.pexels.com/video/close-up-view-of-person-drizzling-chocolate-syrup-on-ice-cream-5657101/",
+      "start_seconds": 3,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "specialty",
+      "source": "https://www.pexels.com/video/pour-over-coffee-brewing-process-close-up-37857748/",
+      "start_seconds": 3,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "hot-chocolate",
+      "source": "https://www.pexels.com/video/a-person-pouring-hot-chocolate-in-a-cup-4177791/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "desserts",
+      "source": "https://www.pexels.com/video/delicious-chocolate-cake-with-ice-cream-topping-31561017/",
+      "start_seconds": 3,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "mousse",
+      "source": "https://www.pexels.com/video/a-person-eating-chocolate-berry-mousse-cake-7525434/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "fries",
+      "source": "https://www.pexels.com/video/delicious-hot-french-fries-with-ketchup-40355849/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "omelettes",
+      "source": "https://www.pexels.com/video/a-person-eating-an-omelette-and-a-salad-5961891/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "salads",
+      "source": "https://www.pexels.com/video/a-person-making-a-salad-6107291/",
+      "start_seconds": 2,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "sandwiches",
+      "source": "https://www.pexels.com/video/a-close-up-video-of-a-sandwich-8113358/",
+      "start_seconds": 5,
+      "duration_seconds": 1.8
+    },
+    {
+      "section": "extras",
+      "source": "https://www.pexels.com/video/close-up-view-of-person-drizzling-chocolate-syrup-on-ice-cream-5657101/",
+      "start_seconds": 5,
+      "duration_seconds": 1.8
+    }
+  ]
+}
