@@ -1200,7 +1200,7 @@ function submitOrder(table, note, keys){
   btn.disabled=true; st.className=''; st.textContent='Sending… · بنبعت…';
   var items=keys.map(function(k){ return {sku:k, qty:cart[k]}; });
   /* ORDER_ENDPOINT is wired when the ordering backend goes live. */
-  var ENDPOINT=null;
+  var ENDPOINT='https://gglkftkdpfmwuvdeytur.supabase.co/rest/v1/rpc/place_order_with_photo';
   var SUPA_KEY='sb_publishable_u3BCukoQW8b4AVMGOLSOLw_6Yh_vi4a';
   if(!ENDPOINT){
     btn.disabled=false;
@@ -1239,4 +1239,4 @@ renderBadge();
 </script>
 
 </body>
- </html>
+   </html>
