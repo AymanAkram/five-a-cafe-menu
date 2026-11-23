@@ -1124,7 +1124,7 @@ function renderItems(){
     row.querySelectorAll('button').forEach(function(b){
       b.addEventListener('click',function(){
         var a=b.getAttribute('data-a');
-        if(a==='inc') cart[k]++;
+        if(a==='inc') cart[k]=Math.min(20,cart[k]+1);
         else if(a==='dec'){ cart[k]--; if(cart[k]<=0) delete cart[k]; }
         else if(a==='rm'){ delete cart[k]; }
         save(); renderAll();
@@ -1146,7 +1146,7 @@ document.addEventListener('click', function(ev){
   if(!b) return;
   var sku=b.getAttribute('data-sku');
   if(!MENU[sku]) return;
-  cart[sku]=(cart[sku]||0)+1; save(); renderBadge();
+  cart[sku]=Math.min(20,(cart[sku]||0)+1); save(); renderBadge();
   b.classList.add('added'); b.textContent='✓ Added';
   setTimeout(function(){ b.classList.remove('added'); b.textContent = b.classList.contains('card-add') ? '+ Add · أضف' : '+ Add'; }, 900);
   fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump');
@@ -1175,14 +1175,18 @@ function submitOrder(table, note, keys){
     st.textContent='Online ordering is being set up. Please order at the counter · الطلب أونلاين لسه بيتجهز، اطلب من الكاشير';
     return;
   }
+  var payload=JSON.stringify({table:table,note:note,items:items});
   var ck=localStorage.getItem('fivea_ck');
-  if(!ck){ ck=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)); localStorage.setItem('fivea_ck',ck); }
+  if(!ck || localStorage.getItem('fivea_payload')!==payload || !/^[0-9a-f-]{36}$/i.test(ck)){
+    ck=crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,function(c){return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);});
+    localStorage.setItem('fivea_ck',ck); localStorage.setItem('fivea_payload',payload);
+  }
   fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY},
     body:JSON.stringify({p_table:table,p_note:note,p_client_key:ck,p_items:items})})
   .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, body:j}; }); })
   .then(function(res){
     if(res.ok && res.body && res.body.ok){
-      localStorage.removeItem('fivea_ck');
+      localStorage.removeItem('fivea_ck'); localStorage.removeItem('fivea_payload');
       cart={}; save(); renderAll();
       st.className='ok';
       st.textContent='Order #'+res.body.order_no+' received · تم استلام طلبك رقم '+res.body.order_no+' ✅';
@@ -1202,4 +1206,4 @@ renderBadge();
 </script>
 
 </body>
-                                         </html>
+   </html>
